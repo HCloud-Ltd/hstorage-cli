@@ -1,0 +1,30 @@
+diff --git a/dist/SyncSkills.js b/dist/SyncSkills.js
+index 757ef33465cbe74a6555f37339d7681c3d671ab4..1bf13d03bb49acd241fa0ee67075aa9ec5243d46 100644
+--- a/dist/SyncSkills.js
++++ b/dist/SyncSkills.js
+@@ -109,7 +109,18 @@ function resolvePackageRoot() {
+     const bin = process.argv[1];
+     if (!bin)
+         return process.cwd();
+-    let dir = path.dirname(fsSync.realpathSync(bin));
++    let dir;
++    try {
++        dir = path.dirname(fsSync.realpathSync(bin));
++    }
++    catch {
++        try {
++            dir = path.dirname(fsSync.realpathSync(process.execPath));
++        }
++        catch {
++            return process.cwd();
++        }
++    }
+     const root = path.parse(dir).root;
+     while (dir !== root) {
+         try {
+diff --git a/examples/npm/node_modules/.bin/incur.src b/Users/s01082/.bun/install/cache/incur@0.3.4@@npm.flatt.tech@@@1/examples/npm/node_modules/.bin/incur.src
+deleted file mode 100644
+index 3bec221a2ebaf0ed75cdb39739d7a2695a24f86e..0000000000000000000000000000000000000000
+diff --git a/examples/npm/node_modules/.bin/tsx b/Users/s01082/.bun/install/cache/incur@0.3.4@@npm.flatt.tech@@@1/examples/npm/node_modules/.bin/tsx
+deleted file mode 100644
+index 8fefc480048f09d3165aaf470c2ddb2525ea3756..0000000000000000000000000000000000000000
