@@ -8,13 +8,17 @@ main() {
   os=$(detect_os)
   arch=$(detect_arch)
 
-  asset="${BINARY_NAME}-${os}-${arch}"
+  base="${BINARY_NAME}-${os}-${arch}"
+  zip_asset="${base}.zip"
+
   if [ "$os" = "windows" ]; then
-    asset="${asset}.exe"
+    binary_name="${base}.exe"
+  else
+    binary_name="${base}"
   fi
 
   version=$(resolve_version)
-  url="https://github.com/${REPO}/releases/download/${version}/${asset}"
+  url="https://github.com/${REPO}/releases/download/${version}/${zip_asset}"
 
   install_dir=$(resolve_install_dir)
   target="${install_dir}/${BINARY_NAME}"
@@ -23,9 +27,11 @@ main() {
   trap 'rm -rf "$tmpdir"' EXIT
 
   echo "Downloading ${BINARY_NAME} ${version} (${os}/${arch})..."
-  download "$url" "${tmpdir}/${BINARY_NAME}"
+  download "$url" "${tmpdir}/${zip_asset}"
 
-  chmod +x "${tmpdir}/${BINARY_NAME}"
+  unzip -qo "${tmpdir}/${zip_asset}" -d "${tmpdir}"
+  chmod +x "${tmpdir}/${binary_name}"
+  mv "${tmpdir}/${binary_name}" "${tmpdir}/${BINARY_NAME}"
 
   echo "Installing to ${target}..."
   install_binary "${tmpdir}/${BINARY_NAME}" "$target"
