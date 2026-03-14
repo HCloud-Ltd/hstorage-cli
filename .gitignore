@@ -3,3 +3,4 @@ dist/
 .sisyphus/evidence/
 *.compiled
 hcli
+.env

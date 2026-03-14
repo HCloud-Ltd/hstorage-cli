@@ -107,7 +107,7 @@ function createRateLimitError(message: string, retryAfter: number, code: string)
   return error
 }
 
-function getAesAlgorithm(keyLength: number): string {
+function getAesAlgorithm(keyLength: number): 'aes-128-gcm' | 'aes-192-gcm' | 'aes-256-gcm' {
   if (keyLength === 16) return 'aes-128-gcm'
   if (keyLength === 24) return 'aes-192-gcm'
   if (keyLength === 32) return 'aes-256-gcm'

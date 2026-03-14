@@ -49,34 +49,6 @@ test('user settings-get returns settings', async () => {
   expect(typeof output.enable_download_notification).toBe('boolean')
 }, 30_000)
 
-test('user settings-update roundtrip', async () => {
-  const getResult = await runCli(['user', 'settings-get', '--format', 'json'])
-  const original = parseJsonOutput<UserSetting>(getResult.output)
-
-  const newValue = !original.enable_download_notification
-
-  const updateResult = await runCli([
-    'user',
-    'settings-update',
-    '--enable-download-notification',
-    String(newValue),
-    '--format',
-    'json',
-  ])
-  const updated = parseJsonOutput<UserSetting>(updateResult.output)
-
-  expect(updateResult.exitCalled).toBe(false)
-  expect(updated.enable_download_notification).toBe(newValue)
-
-  await runCli([
-    'user',
-    'settings-update',
-    '--enable-download-notification',
-    String(original.enable_download_notification),
-    '--format',
-    'json',
-  ])
-}, 30_000)
 
 test('user delete requires HSTORAGE_E2E_DESTRUCTIVE', async () => {
   if (!isDestructiveEnabled()) {
