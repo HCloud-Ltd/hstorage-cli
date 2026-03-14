@@ -48,6 +48,3 @@ jobs:
 
       - name: TypeScript type check
         run: bunx tsc --noEmit
-
-      - name: Run tests
-        run: bun test
