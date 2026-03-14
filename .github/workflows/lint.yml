@@ -15,6 +15,7 @@ on:
       - "markdown/**"
 
 permissions:
+  # Required to checkout code
   contents: read
 
 concurrency:
@@ -23,6 +24,7 @@ concurrency:
 
 jobs:
   lint:
+    name: Lint and type check
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

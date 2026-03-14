@@ -5,10 +5,18 @@ on:
     tags:
       - 'v*'
 
+permissions: {}
+
+concurrency:
+  group: release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
+    name: Build binaries
     runs-on: ubuntu-latest
     permissions:
+      # Required to checkout code
       contents: read
     strategy:
       fail-fast: false
@@ -35,17 +43,21 @@ jobs:
           no-cache: true
       - run: bun install
       - name: Build
-        run: bun build --compile --target=${{ matrix.target }} src/index.ts --outfile ${{ matrix.artifact }}
+        env:
+          BUILD_TARGET: ${{ matrix.target }}
+          BUILD_ARTIFACT: ${{ matrix.artifact }}
+        run: bun build --compile --target="${BUILD_TARGET}" src/index.ts --outfile "${BUILD_ARTIFACT}"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: ${{ matrix.artifact }}
           path: ${{ matrix.artifact }}
 
   release:
+    name: Create release
     needs: build
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write # Required to create GitHub releases
     steps:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:

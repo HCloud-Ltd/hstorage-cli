@@ -7,10 +7,16 @@ on:
   workflow_dispatch:
 
 permissions:
+  # Required to checkout code
   contents: read
+
+concurrency:
+  group: test-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
+    name: Unit tests
     runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -24,8 +30,14 @@ jobs:
 
       - name: Run tests
         run: bun test
+        env:
+          HSTORAGE_EMAIL: ${{ secrets.HSTORAGE_EMAIL }}
+          HSTORAGE_API_KEY: ${{ secrets.HSTORAGE_API_KEY }}
+          HSTORAGE_SECRET_KEY: ${{ secrets.HSTORAGE_SECRET_KEY }}
+          HSTORAGE_API_URL: https://stg-api.hstorage.io
 
   e2e:
+    name: E2E tests
     runs-on: ubuntu-slim
     timeout-minutes: 10
     steps:
