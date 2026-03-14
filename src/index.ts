@@ -11,7 +11,7 @@ import { uploadCli } from "./commands/file/upload";
 import { downloadCli } from "./commands/file/download";
 import { authVars, requireAuth } from "./middleware/auth";
 
-const cli = Cli.create("hstorage", {
+const cli = Cli.create("hcli", {
   description: "HStorage CLI - File management from the command line",
   version: "0.1.0",
   vars: authVars,

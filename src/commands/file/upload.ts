@@ -82,7 +82,7 @@ export const uploadCli = Cli.create('upload', {
       if (!config) {
         return c.error({
           code: 'AUTH_REQUIRED',
-          message: 'Not logged in. Run `hstorage auth login` to authenticate.',
+          message: 'Not logged in. Run `hcli auth login` to authenticate.',
         })
       }
 

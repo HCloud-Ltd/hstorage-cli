@@ -123,7 +123,7 @@ test('info fails without client injection', async () => {
     expect(exitCode).toBe(1)
     expect(payload).toEqual({
       code: 'AUTH_REQUIRED',
-      message: 'Not logged in. Run `hstorage auth login` to authenticate.',
+      message: 'Not logged in. Run `hcli auth login` to authenticate.',
     })
   } finally {
     if (originalXDG === undefined) delete process.env.XDG_CONFIG_HOME

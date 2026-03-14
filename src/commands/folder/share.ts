@@ -27,7 +27,7 @@ folderShareCli.command('shares', {
     if (!client) {
       return c.error({
         code: 'AUTH_REQUIRED',
-        message: 'Not logged in. Run `hstorage auth login` to authenticate.',
+        message: 'Not logged in. Run `hcli auth login` to authenticate.',
       })
     }
 
@@ -49,7 +49,7 @@ folderShareCli.command('share', {
     if (!client) {
       return c.error({
         code: 'AUTH_REQUIRED',
-        message: 'Not logged in. Run `hstorage auth login` to authenticate.',
+        message: 'Not logged in. Run `hcli auth login` to authenticate.',
       })
     }
 
@@ -76,7 +76,7 @@ folderShareCli.command('update-share', {
     if (!client) {
       return c.error({
         code: 'AUTH_REQUIRED',
-        message: 'Not logged in. Run `hstorage auth login` to authenticate.',
+        message: 'Not logged in. Run `hcli auth login` to authenticate.',
       })
     }
 
@@ -101,7 +101,7 @@ folderShareCli.command('remove-share', {
     if (!client) {
       return c.error({
         code: 'AUTH_REQUIRED',
-        message: 'Not logged in. Run `hstorage auth login` to authenticate.',
+        message: 'Not logged in. Run `hcli auth login` to authenticate.',
       })
     }
 
@@ -117,7 +117,7 @@ folderShareCli.command('shared-folders', {
     if (!client) {
       return c.error({
         code: 'AUTH_REQUIRED',
-        message: 'Not logged in. Run `hstorage auth login` to authenticate.',
+        message: 'Not logged in. Run `hcli auth login` to authenticate.',
       })
     }
 

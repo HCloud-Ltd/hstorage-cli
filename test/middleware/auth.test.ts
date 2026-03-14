@@ -57,7 +57,7 @@ test("returns AUTH_REQUIRED when credentials are missing", async () => {
   expect(exitCode).toBe(1);
   expect(payload).toEqual({
     code: "AUTH_REQUIRED",
-    message: "Not logged in. Run `hstorage auth login` to authenticate.",
+    message: "Not logged in. Run `hcli auth login` to authenticate.",
   });
 });
 

@@ -17,7 +17,7 @@ userCli.command('info', {
     if (!client) {
       return c.error({
         code: 'AUTH_REQUIRED',
-        message: 'Not logged in. Run `hstorage auth login` to authenticate.',
+        message: 'Not logged in. Run `hcli auth login` to authenticate.',
       })
     }
 
@@ -53,7 +53,7 @@ userCli.command('delete', {
       if (!config) {
         return c.error({
           code: 'AUTH_REQUIRED',
-          message: 'Not logged in. Run `hstorage auth login` to authenticate.',
+          message: 'Not logged in. Run `hcli auth login` to authenticate.',
         })
       }
 
@@ -74,7 +74,7 @@ userCli.command('settings-get', {
     if (!client) {
       return c.error({
         code: 'AUTH_REQUIRED',
-        message: 'Not logged in. Run `hstorage auth login` to authenticate.',
+        message: 'Not logged in. Run `hcli auth login` to authenticate.',
       })
     }
 
@@ -98,7 +98,7 @@ userCli.command('settings-update', {
     if (!client) {
       return c.error({
         code: 'AUTH_REQUIRED',
-        message: 'Not logged in. Run `hstorage auth login` to authenticate.',
+        message: 'Not logged in. Run `hcli auth login` to authenticate.',
       })
     }
 
