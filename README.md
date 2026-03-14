@@ -9,17 +9,37 @@
 ### 1. インストール
 
 ```bash
-bun install
+curl -fsSL https://raw.githubusercontent.com/HCloud-Ltd/hstorage-cli/main/install.sh | sh
 ```
 
-### 2. ビルド
+<details>
+<summary>その他のインストール方法</summary>
+
+#### バージョンを指定
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/HCloud-Ltd/hstorage-cli/main/install.sh | HCLI_VERSION=v0.0.3 sh
+```
+
+#### インストール先を変更
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/HCloud-Ltd/hstorage-cli/main/install.sh | HCLI_INSTALL_DIR=~/.bin sh
+```
+
+デフォルトでは `/usr/local/bin` にインストールされます。書き込み権限がない場合は `~/.local/bin` にフォールバックします。
+
+#### ソースからビルド
+
+```bash
+bun install
 bun run build
-mv hcli /usr/local/bin/hstorage
+mv hcli /usr/local/bin/hcli
 ```
 
 > 開発中は `bun run dev -- <command>` でビルドせずに実行できます。
+
+</details>
 
 ### 3. 認証
 

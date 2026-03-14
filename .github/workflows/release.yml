@@ -47,10 +47,16 @@ jobs:
           BUILD_TARGET: ${{ matrix.target }}
           BUILD_ARTIFACT: ${{ matrix.artifact }}
         run: bun build --compile --target="${BUILD_TARGET}" src/index.ts --outfile "${BUILD_ARTIFACT}"
+      - name: Zip artifact
+        env:
+          BUILD_ARTIFACT: ${{ matrix.artifact }}
+        run: |
+          ZIP_NAME="${BUILD_ARTIFACT%.exe}.zip"
+          zip "${ZIP_NAME}" "${BUILD_ARTIFACT}"
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
-          name: ${{ matrix.artifact }}
-          path: ${{ matrix.artifact }}
+          name: ${{ matrix.artifact }}.zip
+          path: "*.zip"
 
   release:
     name: Create release
