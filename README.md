@@ -6,7 +6,7 @@
 
 ### 使用例デモ
 
-<video src="assets/video.mp4" controls></video>
+<video src="https://hstorage.io/dl/fnwigAWkSUO3.mp4?download=true" controls></video>
 
 ## 目次
 

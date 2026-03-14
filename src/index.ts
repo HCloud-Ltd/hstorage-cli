@@ -33,7 +33,14 @@ cli
   .command(sftpCli.use(requireAuth));
 
 if (import.meta.main) {
-  cli.serve();
+  cli.serve(undefined, {
+    exit: (code) => {
+      if (code !== 0) {
+        process.stderr.write('\nIf you believe this is a bug, please create an issue at:\nhttps://github.com/HCloud-Ltd/hstorage-cli/issues\n')
+      }
+      process.exit(code)
+    },
+  })
 }
 
 export { cli };
