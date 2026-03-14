@@ -4,6 +4,10 @@
 
 [incur](https://github.com/wevm/incur) フレームワークで構築されており、人間にも AI エージェントにも使いやすい CLI です。
 
+### 使用例デモ
+
+<video src="assets/video.mp4" controls></video>
+
 ## 目次
 
 - [クイックスタート](#クイックスタート)
