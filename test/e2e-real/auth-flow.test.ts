@@ -19,7 +19,7 @@ afterEach(async () => {
 })
 
 test('auth login -> status -> logout -> status flow', async () => {
-  const env = loadE2EEnv()
+  const env = await loadE2EEnv()
 
   const logoutFirst = await runCli(['auth', 'logout', '--format', 'json'])
 

@@ -26,7 +26,7 @@ let createdFolderId: number | undefined
 
 beforeEach(async () => {
   ctx = await setupE2EContext()
-  env = loadE2EEnv()
+  env = await loadE2EEnv()
   uploadedExternalId = undefined
   createdFolderId = undefined
 })

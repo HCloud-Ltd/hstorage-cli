@@ -8,7 +8,6 @@
   "scripts": {
     "dev": "bun run src/index.ts",
     "test": "bun test",
-    "test:pre-commit": "bun test test/commands test/lib test/middleware test/types test/security test/e2e/ test/helpers test/smoke.test.ts test/debug-folder-share.test.ts",
     "build": "bun build --compile src/index.ts --outfile hcli",
     "prepare": "husky"
   },

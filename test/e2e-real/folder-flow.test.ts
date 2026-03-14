@@ -19,7 +19,7 @@ let createdFolderUid: string | undefined
 
 beforeEach(async () => {
   ctx = await setupE2EContext()
-  env = loadE2EEnv()
+  env = await loadE2EEnv()
   createdFolderId = undefined
   createdFolderUid = undefined
 })

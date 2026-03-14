@@ -1,5 +1,5 @@
 import { mkdtemp, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { cli } from '../../src/index'
 import { saveConfig } from '../../src/lib/config'
@@ -14,19 +14,32 @@ export interface E2ERealEnv {
   apiUrl: string
 }
 
-export function loadE2EEnv(): E2ERealEnv {
+export async function loadE2EEnv(): Promise<E2ERealEnv> {
+  const apiUrl = process.env.HSTORAGE_API_URL || 'https://stg-api.hstorage.io'
+
   const email = process.env.HSTORAGE_EMAIL
   const apiKey = process.env.HSTORAGE_API_KEY
   const secretKey = process.env.HSTORAGE_SECRET_KEY
-  const apiUrl = process.env.HSTORAGE_API_URL || 'https://stg-api.hstorage.io'
 
-  if (!email || !apiKey || !secretKey) {
-    throw new Error(
-      'Missing required environment variables: HSTORAGE_EMAIL, HSTORAGE_API_KEY, HSTORAGE_SECRET_KEY',
-    )
+  if (email && apiKey && secretKey) {
+    return { email, apiKey, secretKey, apiUrl }
   }
 
-  return { email, apiKey, secretKey, apiUrl }
+  const configPath = join(homedir(), '.config', 'hstorage', 'credentials.json')
+  try {
+    const file = Bun.file(configPath)
+    if (await file.exists()) {
+      const config = (await file.json()) as HStorageConfig
+      if (config.email && config.apiKey && config.secretKey) {
+        return { email: config.email, apiKey: config.apiKey, secretKey: config.secretKey, apiUrl }
+      }
+    }
+  } catch {
+  }
+
+  throw new Error(
+    'Missing credentials: Environment variables HSTORAGE_EMAIL, HSTORAGE_API_KEY, HSTORAGE_SECRET_KEY are not set and no config file at ~/.config/hstorage/credentials.json',
+  )
 }
 
 export function makeConfig(env: E2ERealEnv): HStorageConfig {
@@ -79,7 +92,7 @@ export interface E2EContext {
 }
 
 export async function setupE2EContext(): Promise<E2EContext> {
-  const env = loadE2EEnv()
+  const env = await loadE2EEnv()
   const tmpDir = await mkdtemp(join(tmpdir(), 'hstorage-e2e-real-'))
   const originalXDG = process.env.XDG_CONFIG_HOME
   const originalApiUrl = process.env.HSTORAGE_API_URL

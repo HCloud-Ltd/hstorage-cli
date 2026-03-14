@@ -1,1 +1,1 @@
-bun run test:pre-commit
+bun test

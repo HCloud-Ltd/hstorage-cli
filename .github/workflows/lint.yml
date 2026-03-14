@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   lint:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - name: Checkout
