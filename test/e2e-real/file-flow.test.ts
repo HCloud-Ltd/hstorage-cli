@@ -42,6 +42,7 @@ afterEach(async () => {
 })
 
 test('file upload -> list -> info -> move -> download -> delete flow', async () => {
+  if (!ctx) throw new Error('E2E context not initialized')
   const fileName = `${uniqueName('e2e-test')}.txt`
   const filePath = join(ctx.tmpDir, fileName)
   const fileContent = `E2E test file content: ${Date.now()}`
