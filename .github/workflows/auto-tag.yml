@@ -9,13 +9,9 @@ permissions:
 
 jobs:
   tag:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version:
-          - 20
+    runs-on: ubuntu-slim
     steps:
-      - uses: phish108/autotag-action@v1.1.64
+      - uses: phish108/autotag-action@6dcf3d78f00f1a55df67a02428af3f1b862da6dc # v1.1.64
         with:
           github-token: ${{ secrets.PAT }}
           branch: main
