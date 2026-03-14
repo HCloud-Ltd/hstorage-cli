@@ -1,7 +1,10 @@
 import { afterEach, expect, test } from 'bun:test'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { Cli, middleware } from 'incur'
 import { createMockServer, type Route } from '../helpers/mock-server'
-import { testConfig, testLoginInit, testNonceResponse } from '../helpers/fixtures'
+import { testConfig, testLoginInit } from '../helpers/fixtures'
 import { authVars } from '../../src/middleware/auth'
 import { createApiClient } from '../../src/lib/client'
 import { userCli } from '../../src/commands/user'
@@ -23,11 +26,6 @@ afterEach(() => {
 
 function setupCli(routes: Route[]) {
   server = createMockServer([
-    {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-      body: testNonceResponse,
-    },
     ...routes,
   ])
 
@@ -92,10 +90,6 @@ test('info shows user data without api.secret', async () => {
   expect(response.output).not.toContain(testLoginInit.api.secret)
   expect(server.requests).toMatchObject([
     {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-    },
-    {
       method: 'GET',
       path: '/user',
     },
@@ -103,29 +97,39 @@ test('info shows user data without api.secret', async () => {
 })
 
 test('info fails without client injection', async () => {
-  const outputs: string[] = []
-  let exitCalled = false
-  let exitCode = 0
+  const tmpDir = await mkdtemp(join(tmpdir(), 'hstorage-test-'))
+  const originalXDG = process.env.XDG_CONFIG_HOME
+  process.env.XDG_CONFIG_HOME = tmpDir
 
-  await Cli.create('test', { vars: authVars }).command(userCli).serve(
-    ['user', 'info', '--format', 'json'],
-    {
-      stdout: (s) => outputs.push(s),
-      exit: (code) => {
-        exitCalled = true
-        exitCode = code
+  try {
+    const outputs: string[] = []
+    let exitCalled = false
+    let exitCode = 0
+
+    await Cli.create('test', { vars: authVars }).command(userCli).serve(
+      ['user', 'info', '--format', 'json'],
+      {
+        stdout: (s) => outputs.push(s),
+        exit: (code) => {
+          exitCalled = true
+          exitCode = code
+        },
       },
-    },
-  )
+    )
 
-  const payload = JSON.parse(outputs.join(''))
+    const payload = JSON.parse(outputs.join(''))
 
-  expect(exitCalled).toBe(true)
-  expect(exitCode).toBe(1)
-  expect(payload).toEqual({
-    code: 'AUTH_REQUIRED',
-    message: 'Not logged in. Run `hstorage auth login` to authenticate.',
-  })
+    expect(exitCalled).toBe(true)
+    expect(exitCode).toBe(1)
+    expect(payload).toEqual({
+      code: 'AUTH_REQUIRED',
+      message: 'Not logged in. Run `hstorage auth login` to authenticate.',
+    })
+  } finally {
+    if (originalXDG === undefined) delete process.env.XDG_CONFIG_HOME
+    else process.env.XDG_CONFIG_HOME = originalXDG
+    await rm(tmpDir, { recursive: true, force: true })
+  }
 })
 
 test('delete requires confirmation flag', async () => {
@@ -168,8 +172,8 @@ test('delete removes account when confirm is true', async () => {
   expect(payload).toEqual({
     message: 'Account deleted successfully',
   })
-  expect(server.requests).toHaveLength(2)
-  expect(server.requests[1]).toMatchObject({
+  expect(server.requests).toHaveLength(1)
+  expect(server.requests[0]).toMatchObject({
     method: 'DELETE',
     path: '/user',
   })
@@ -209,10 +213,6 @@ test('settings get returns user setting response', async () => {
     enable_download_notification: false,
   })
   expect(server.requests).toMatchObject([
-    {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-    },
     {
       method: 'GET',
       path: '/user/setting',
@@ -255,7 +255,7 @@ test('settings update sends snake_case body and returns response', async () => {
 
   expect(response.exitCalled).toBe(false)
   expect(payload).toEqual(updatedUserSettings)
-  expect(server.requests[1]).toMatchObject({
+  expect(server.requests[0]).toMatchObject({
     method: 'PUT',
     path: '/user/setting',
     body: {

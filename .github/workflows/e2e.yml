@@ -1,0 +1,28 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: bun install
+
+      - name: Run E2E tests
+        run: bun test test/e2e-real/
+        env:
+          HSTORAGE_EMAIL: ${{ secrets.HSTORAGE_EMAIL }}
+          HSTORAGE_API_KEY: ${{ secrets.HSTORAGE_API_KEY }}
+          HSTORAGE_SECRET_KEY: ${{ secrets.HSTORAGE_SECRET_KEY }}
+          HSTORAGE_API_URL: https://stg-api.hstorage.io

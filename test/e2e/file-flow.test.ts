@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { saveConfig } from '../../src/lib/config'
 import { createMockServer } from '../helpers/mock-server'
-import { testConfig, testGetFilesResponse, testNonceResponse, testUpload } from '../helpers/fixtures'
+import { testConfig, testGetFilesResponse, testUpload } from '../helpers/fixtures'
 import { cli } from '../../src/index'
 
 let server = createMockServer([])
@@ -58,7 +58,7 @@ function setupServer() {
     file_name: uploadFileName,
     share_url: 'https://example.com/f/e2e',
     direct_url: 'https://cdn.example.com/test.txt',
-    pre_signed_url: '',
+    presigned_url: '',
   }
 
   const fileInfoResponse = {
@@ -69,17 +69,12 @@ function setupServer() {
   server = createMockServer([
     {
       method: 'POST',
-      path: '/api/generate-crypto-key',
-      body: testNonceResponse,
-    },
-    {
-      method: 'POST',
       path: '/upload/v1/presigned',
       body: presignedResponse,
     },
     {
       method: 'PUT',
-      path: '/upload-target',
+      path: '/test-bucket/test-key',
       body: {},
     },
     {
@@ -117,7 +112,7 @@ function setupServer() {
     },
   ])
 
-  presignedResponse.pre_signed_url = `${server.url}/upload-target`
+  presignedResponse.presigned_url = `${server.url}/test-bucket/test-key`
   fileInfoResponse.download_url = `${server.url}/download-target`
 
   process.env.HSTORAGE_API_URL = server.url
@@ -160,8 +155,8 @@ test('file upload -> list -> info -> move -> download -> delete flow', async () 
     share_url: 'https://example.com/f/e2e',
     direct_url: 'https://cdn.example.com/test.txt',
   })
-  expect(uploadOutput.pre_signed_url).toBeUndefined()
-  expect(server.requests[1]).toMatchObject({
+  expect(uploadOutput.presigned_url).toBeUndefined()
+  expect(server.requests[0]).toMatchObject({
     method: 'POST',
     path: '/upload/v1/presigned',
     body: {
@@ -234,19 +229,13 @@ test('file upload -> list -> info -> move -> download -> delete flow', async () 
     ok: true,
   })
 
-  expect(server.requests).toHaveLength(14)
-  expect(server.requests[0]).toMatchObject({ method: 'POST', path: '/api/generate-crypto-key' })
-  expect(server.requests[1]).toMatchObject({ method: 'POST', path: '/upload/v1/presigned' })
-  expect(server.requests[2]).toMatchObject({ method: 'PUT', path: '/upload-target' })
-  expect(server.requests[3]).toMatchObject({ method: 'POST', path: '/api/generate-crypto-key' })
-  expect(server.requests[4]).toMatchObject({ method: 'GET', path: '/files' })
-  expect(server.requests[5]).toMatchObject({ method: 'POST', path: '/api/generate-crypto-key' })
-  expect(server.requests[6]).toMatchObject({ method: 'GET', path: '/file/info' })
-  expect(server.requests[7]).toMatchObject({ method: 'POST', path: '/api/generate-crypto-key' })
-  expect(server.requests[8]).toMatchObject({ method: 'POST', path: '/file/move' })
-  expect(server.requests[9]).toMatchObject({ method: 'POST', path: '/api/generate-crypto-key' })
-  expect(server.requests[10]).toMatchObject({ method: 'GET', path: '/file/info' })
-  expect(server.requests[11]).toMatchObject({ method: 'GET', path: '/download-target' })
-  expect(server.requests[12]).toMatchObject({ method: 'POST', path: '/api/generate-crypto-key' })
-  expect(server.requests[13]).toMatchObject({ method: 'DELETE', path: '/file/my' })
+  expect(server.requests).toHaveLength(8)
+  expect(server.requests[0]).toMatchObject({ method: 'POST', path: '/upload/v1/presigned' })
+  expect(server.requests[1]).toMatchObject({ method: 'PUT', path: '/test-bucket/test-key' })
+  expect(server.requests[2]).toMatchObject({ method: 'GET', path: '/files' })
+  expect(server.requests[3]).toMatchObject({ method: 'GET', path: '/file/info' })
+  expect(server.requests[4]).toMatchObject({ method: 'POST', path: '/file/move' })
+  expect(server.requests[5]).toMatchObject({ method: 'GET', path: '/file/info' })
+  expect(server.requests[6]).toMatchObject({ method: 'GET', path: '/download-target' })
+  expect(server.requests[7]).toMatchObject({ method: 'DELETE', path: '/file/my' })
 })

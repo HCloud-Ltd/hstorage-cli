@@ -1,4 +1,5 @@
-import type { ApiError, PostmanReq, PostmanRes, RateLimitError } from '../types/api'
+import { createCipheriv, randomBytes } from 'node:crypto'
+import type { ApiError, ErrorMsg, RateLimitError } from '../types/api'
 import type { HStorageConfig } from '../types/config'
 
 export const DEFAULT_API_URL = 'https://api.hstorage.io'
@@ -43,6 +44,16 @@ function isApiError(payload: unknown): payload is ApiError {
     && typeof (payload as ApiError).error.code === 'string'
     && typeof (payload as ApiError).error.message === 'string'
     && !('retry_after' in (payload as Record<string, unknown>))
+  )
+}
+
+function isErrorMsg(payload: unknown): payload is ErrorMsg {
+  return (
+    typeof payload === 'object'
+    && payload !== null
+    && typeof (payload as ErrorMsg).title === 'string'
+    && typeof (payload as ErrorMsg).msg === 'string'
+    && typeof (payload as ErrorMsg).error === 'string'
   )
 }
 
@@ -96,55 +107,37 @@ function createRateLimitError(message: string, retryAfter: number, code: string)
   return error
 }
 
+function getAesAlgorithm(keyLength: number): string {
+  if (keyLength === 16) return 'aes-128-gcm'
+  if (keyLength === 24) return 'aes-192-gcm'
+  if (keyLength === 32) return 'aes-256-gcm'
+
+  throw createApiError(
+    `Invalid secret key length: ${keyLength}. Must be 16, 24, or 32 bytes.`,
+    'invalid_secret_key',
+  )
+}
+
 export function createApiClient(config: HStorageConfig, options?: { baseUrl?: string }): ApiClient {
   const baseUrl = options?.baseUrl || getApiBaseUrl()
-  let cachedNonce: string | null = null
 
-  async function getNonce(): Promise<string> {
-    if (cachedNonce !== null) {
-      return cachedNonce
+  function generateAuthCredentials(): { apiKey: string; nonce: string } {
+    const key = Buffer.from(config.secretKey)
+    const algorithm = getAesAlgorithm(key.length)
+    const nonce = randomBytes(12)
+    const cipher = createCipheriv(algorithm, key, nonce)
+
+    const encrypted = Buffer.concat([
+      cipher.update(config.apiKey, 'utf8'),
+      cipher.final(),
+    ])
+    const authTag = cipher.getAuthTag()
+    const ciphertext = Buffer.concat([encrypted, authTag])
+
+    return {
+      apiKey: ciphertext.toString('hex'),
+      nonce: nonce.toString('hex'),
     }
-
-    const response = await fetch(`${buildUrl(baseUrl, '/api/generate-crypto-key')}`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        api_key: config.apiKey,
-        secret_key: config.secretKey,
-      } satisfies PostmanReq),
-    })
-
-    const responseText = await response.text()
-    const payload = parseJsonResponse(responseText)
-
-    if (!response.ok) {
-      if (isRateLimitError(payload)) {
-        throw createRateLimitError(payload.message, payload.retry_after, payload.error)
-      }
-
-      if (isApiError(payload)) {
-        throw createApiError(payload.error.message, payload.error.code)
-      }
-
-      throw createApiError(response.statusText || 'Failed to generate nonce', String(response.status))
-    }
-
-    if (
-      typeof payload !== 'object'
-      || payload === null
-      || typeof (payload as PostmanRes).api_key !== 'string'
-      || typeof (payload as PostmanRes).nonce !== 'string'
-    ) {
-      throw createApiError('Invalid nonce response', 'invalid_nonce_response')
-    }
-
-    const { nonce } = payload as PostmanRes
-
-    cachedNonce = nonce
-
-    return nonce
   }
 
   async function request<T>(
@@ -153,15 +146,15 @@ export function createApiClient(config: HStorageConfig, options?: { baseUrl?: st
     body?: unknown,
     params?: QueryParams,
   ): Promise<T> {
-    const nonce = await getNonce()
+    const credentials = generateAuthCredentials()
     const response = await fetch(buildUrl(baseUrl, path, params), {
       method,
       headers: {
         accept: 'application/json',
         'content-type': 'application/json',
-        'x-eu-api-key': config.apiKey,
+        'x-eu-api-key': credentials.apiKey,
         'x-eu-email': config.email,
-        'x-eu-nonce': nonce,
+        'x-eu-nonce': credentials.nonce,
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     })
@@ -176,6 +169,10 @@ export function createApiClient(config: HStorageConfig, options?: { baseUrl?: st
 
       if (isApiError(payload)) {
         throw createApiError(payload.error.message, payload.error.code)
+      }
+
+      if (isErrorMsg(payload)) {
+        throw createApiError(payload.msg, payload.error)
       }
 
       throw createApiError(response.statusText || 'Request failed', String(response.status))

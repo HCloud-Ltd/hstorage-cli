@@ -6,7 +6,7 @@ import { statSync } from 'node:fs'
 import { cli } from '../../src/index'
 import { createMockServer, type Route } from '../helpers/mock-server'
 import { saveConfig, getConfigPath } from '../../src/lib/config'
-import { testConfig, testNonceResponse } from '../helpers/fixtures'
+import { testConfig } from '../helpers/fixtures'
 
 let server: ReturnType<typeof createMockServer> | null = null
 let tmpDir = ''
@@ -19,7 +19,7 @@ function buildUploadResponse(baseUrl: string) {
   return {
     external_id: 'ext_secret_check',
     file_name: 'secret-check.txt',
-    pre_signed_url: `${baseUrl}/upload-target?origin=${encodeURIComponent(presignedUrlWithSecretPreview)}`,
+    presigned_url: `${baseUrl}/test-bucket/test-key?origin=${encodeURIComponent(presignedUrlWithSecretPreview)}`,
     share_url: 'https://hstorage.example.com/f/secret-check',
     direct_url: 'https://cdn.hstorage.example.com/secret-check.txt',
   }
@@ -62,7 +62,7 @@ function withMockServer(routes: Route[]) {
 
   const putRoute = {
     method: 'PUT' as const,
-    path: '/upload-target',
+    path: '/test-bucket/test-key',
     body: {},
   }
 
@@ -103,9 +103,9 @@ describe('secret redaction', () => {
   it('does not print secret_key in auth login output', async () => {
     server = createMockServer([
       {
-        method: 'POST',
-        path: '/api/generate-crypto-key',
-        body: testNonceResponse,
+        method: 'GET',
+        path: '/user',
+        body: { email: testConfig.email },
       },
     ])
     process.env.HSTORAGE_API_URL = server.url
@@ -135,9 +135,9 @@ describe('secret redaction', () => {
   it('does not print apiKey in auth login output', async () => {
     server = createMockServer([
       {
-        method: 'POST',
-        path: '/api/generate-crypto-key',
-        body: testNonceResponse,
+        method: 'GET',
+        path: '/user',
+        body: { email: testConfig.email },
       },
     ])
     process.env.HSTORAGE_API_URL = server.url
@@ -163,11 +163,6 @@ describe('secret redaction', () => {
   it('does not print presigned_url / pre_signed_url in upload output', async () => {
     await saveConfig(testConfig)
     server = withMockServer([
-      {
-        method: 'POST',
-        path: '/api/generate-crypto-key',
-        body: testNonceResponse,
-      },
     ])
     process.env.HSTORAGE_API_URL = server.url
 
@@ -191,11 +186,6 @@ describe('secret redaction', () => {
   it('does not print x-eu-api-key header value in upload output', async () => {
     await saveConfig(testConfig)
     server = withMockServer([
-      {
-        method: 'POST',
-        path: '/api/generate-crypto-key',
-        body: testNonceResponse,
-      },
     ])
     process.env.HSTORAGE_API_URL = server.url
 
@@ -218,11 +208,6 @@ describe('secret redaction', () => {
   it('does not print x-eu-nonce header value in upload output', async () => {
     await saveConfig(testConfig)
     server = withMockServer([
-      {
-        method: 'POST',
-        path: '/api/generate-crypto-key',
-        body: testNonceResponse,
-      },
     ])
     process.env.HSTORAGE_API_URL = server.url
 
@@ -239,15 +224,14 @@ describe('secret redaction', () => {
 
     expect(response.exitCalled).toBe(false)
     expect(response.output).not.toContain('x-eu-nonce')
-    expect(response.output).not.toContain(testNonceResponse.nonce)
   })
 
   it('creates credentials file with 0600 permissions', async () => {
     server = createMockServer([
       {
-        method: 'POST',
-        path: '/api/generate-crypto-key',
-        body: testNonceResponse,
+        method: 'GET',
+        path: '/user',
+        body: { email: testConfig.email },
       },
     ])
     process.env.HSTORAGE_API_URL = server.url

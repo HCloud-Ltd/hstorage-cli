@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { saveConfig } from '../../src/lib/config'
 import { createMockServer } from '../helpers/mock-server'
-import { testConfig, testNonceResponse, testTeamResponse, testTeamStorageResponse } from '../helpers/fixtures'
+import { testConfig, testTeamResponse, testTeamStorageResponse } from '../helpers/fixtures'
 import { cli } from '../../src/index'
 
 let server = createMockServer([])
@@ -20,11 +20,6 @@ beforeEach(async () => {
   await saveConfig(testConfig)
 
   server = createMockServer([
-    {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-      body: testNonceResponse,
-    },
     {
       method: 'GET',
       path: '/team',
@@ -148,19 +143,11 @@ test('team info -> invite -> storage -> remove-member flow', async () => {
     message: 'Member removed',
   })
 
-  expect(server.requests).toHaveLength(8)
+  expect(server.requests).toHaveLength(4)
   expect(server.requests).toMatchObject([
-    {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-    },
     {
       method: 'GET',
       path: '/team',
-    },
-    {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
     },
     {
       method: 'POST',
@@ -174,16 +161,8 @@ test('team info -> invite -> storage -> remove-member flow', async () => {
       ],
     },
     {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-    },
-    {
       method: 'GET',
       path: '/team/storage',
-    },
-    {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
     },
     {
       method: 'DELETE',

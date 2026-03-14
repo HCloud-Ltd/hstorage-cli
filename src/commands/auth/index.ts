@@ -1,52 +1,52 @@
 import { Cli, z } from 'incur'
 import { createApiClient, getApiBaseUrl } from '../../lib/client'
 import { deleteConfig, hasConfig, loadConfig, saveConfig } from '../../lib/config'
+import { promptInput, promptSecret } from '../../lib/prompt'
 
 export const authCli = Cli.create('auth', {
   description: 'Authentication commands',
 })
 
 authCli.command('login', {
-  description: 'Log in to hStorage',
+  description: 'Log in to HStorage',
   options: z.object({
-    email: z.string().describe('Email address'),
-    apiKey: z.string().describe('API key'),
-    secretKey: z.string().describe('Secret key'),
+    email: z.string().optional().describe('Email address'),
+    apiKey: z.string().optional().describe('API key'),
+    secretKey: z.string().optional().describe('Secret key'),
   }),
   run: async (c) => {
-    const res = await fetch(`${getApiBaseUrl()}/api/generate-crypto-key`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        api_key: c.options.apiKey,
-        secret_key: c.options.secretKey,
-      }),
-    })
+    const email = c.options.email ?? await promptInput('Email: ')
+    const apiKey = c.options.apiKey ?? await promptSecret('API Key: ')
+    const secretKey = c.options.secretKey ?? await promptSecret('Secret Key: ')
 
-    if (!res.ok) {
+    if (!email || !apiKey || !secretKey) {
+      return c.error({
+        code: 'MISSING_CREDENTIALS',
+        message: 'Email, API key, and secret key are required.',
+      })
+    }
+
+    try {
+      const client = createApiClient({ email, apiKey, secretKey }, { baseUrl: getApiBaseUrl() })
+      await client.get('/user')
+    } catch {
       return c.error({
         code: 'INVALID_CREDENTIALS',
         message: 'Invalid credentials',
       })
     }
 
-    await saveConfig({
-      email: c.options.email,
-      apiKey: c.options.apiKey,
-      secretKey: c.options.secretKey,
-    })
+    await saveConfig({ email, apiKey, secretKey })
 
     return {
       message: 'Logged in successfully',
-      email: c.options.email,
+      email,
     }
   },
 })
 
 authCli.command('logout', {
-  description: 'Log out from hStorage',
+  description: 'Log out from HStorage',
   run: async (c) => {
     const config = await loadConfig()
 
@@ -61,7 +61,11 @@ authCli.command('logout', {
       baseUrl: getApiBaseUrl(),
     })
 
-    await client.post('/user/logout')
+    try {
+      await client.post('/user/logout')
+    } catch {
+    }
+
     await deleteConfig()
 
     return { message: 'Logged out successfully' }

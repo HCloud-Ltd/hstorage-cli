@@ -1,7 +1,7 @@
 import { afterEach, expect, test } from 'bun:test'
 import { Cli, middleware } from 'incur'
 import { createMockServer, type Route } from '../helpers/mock-server'
-import { testConfig, testGetFilesResponse, testNonceResponse, testUpload } from '../helpers/fixtures'
+import { testConfig, testGetFilesResponse, testUpload } from '../helpers/fixtures'
 import { authVars } from '../../src/middleware/auth'
 import { createApiClient } from '../../src/lib/client'
 import { fileCli } from '../../src/commands/file'
@@ -16,7 +16,6 @@ afterEach(() => {
 
 function setupCli(routes: Route[]) {
   server = createMockServer([
-    { method: 'POST', path: '/api/generate-crypto-key', body: testNonceResponse },
     ...routes,
   ])
 
@@ -144,7 +143,7 @@ test('update with lock update_type calls file update endpoint', async () => {
 
   expect(response.exitCalled).toBe(false)
   expect(payload.external_id).toBe(testExternalId)
-  expect(server.requests[1]).toMatchObject({
+  expect(server.requests[0]).toMatchObject({
     method: 'PUT',
     path: '/file',
     body: { external_id: testExternalId },
@@ -191,7 +190,7 @@ test('delete with confirmation calls delete endpoint', async () => {
 
   expect(response.exitCalled).toBe(false)
   expect(payload.ok).toBe(true)
-  expect(server.requests[1]).toMatchObject({
+  expect(server.requests[0]).toMatchObject({
     method: 'DELETE',
     path: '/file/my',
     body: null,
@@ -223,7 +222,7 @@ test('move sends external id and target folder id', async () => {
 
   expect(response.exitCalled).toBe(false)
   expect(payload.external_id).toBe(testExternalId)
-  expect(server.requests[1]).toMatchObject({
+  expect(server.requests[0]).toMatchObject({
     method: 'POST',
     path: '/file/move',
     body: {
@@ -258,7 +257,7 @@ test('email sends email parameter and external id body', async () => {
 
   expect(response.exitCalled).toBe(false)
   expect(payload).toEqual({ ok: true })
-  expect(server.requests[1]).toMatchObject({
+  expect(server.requests[0]).toMatchObject({
     method: 'POST',
     path: '/file/email',
     body: { external_id: testExternalId },

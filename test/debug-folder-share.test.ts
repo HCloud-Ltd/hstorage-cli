@@ -1,14 +1,13 @@
 import { test, expect } from 'bun:test'
 import { Cli, middleware } from 'incur'
 import { createMockServer } from './helpers/mock-server'
-import { testConfig, testNonceResponse, testFolderShare } from './helpers/fixtures'
+import { testConfig, testFolderShare } from './helpers/fixtures'
 import { authVars } from '../src/middleware/auth'
 import { createApiClient } from '../src/lib/client'
 import { folderShareCli } from '../src/commands/folder/share'
 
 test('debug shares', async () => {
   const server = createMockServer([
-    { method: 'POST', path: '/api/generate-crypto-key', body: testNonceResponse },
     { method: 'GET', path: '/folder/folder-uid-abc/shares', body: { shares: [testFolderShare], total: 1 } },
   ])
 

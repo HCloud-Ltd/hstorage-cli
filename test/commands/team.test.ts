@@ -3,7 +3,6 @@ import { Cli, middleware } from 'incur'
 import { createMockServer, type Route } from '../helpers/mock-server'
 import {
   testConfig,
-  testNonceResponse,
   testTeamResponse,
   testTeamStorageResponse,
 } from '../helpers/fixtures'
@@ -19,11 +18,6 @@ afterEach(() => {
 
 function setupCli(routes: Route[]) {
   server = createMockServer([
-    {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-      body: testNonceResponse,
-    },
     ...routes,
   ])
 
@@ -85,10 +79,6 @@ test('info shows team leader and members', async () => {
   })
   expect(server.requests).toMatchObject([
     {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-    },
-    {
       method: 'GET',
       path: '/team',
     },
@@ -122,7 +112,7 @@ test('invite sends invite payload as array', async () => {
 
   expect(response.exitCalled).toBe(false)
   expect(payload).toEqual({ ok: true })
-  expect(server.requests[1]).toMatchObject({
+  expect(server.requests[0]).toMatchObject({
     method: 'POST',
     path: '/team/invite',
     body: [
@@ -176,10 +166,6 @@ test('remove-member deletes member when confirmed', async () => {
   expect(response.exitCalled).toBe(false)
   expect(payload).toEqual({ message: 'Member removed' })
   expect(server.requests).toMatchObject([
-    {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-    },
     {
       method: 'DELETE',
       path: '/team/member',
@@ -236,7 +222,7 @@ test('update-storage sends update body in snake_case', async () => {
 
   expect(response.exitCalled).toBe(false)
   expect(payload).toEqual({ ok: true })
-  expect(server.requests[1]).toMatchObject({
+  expect(server.requests[0]).toMatchObject({
     method: 'PUT',
     path: '/team/member/storage',
     body: {

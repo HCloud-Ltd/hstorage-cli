@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Cli } from 'incur'
 import { createMockServer } from '../helpers/mock-server'
-import { testConfig, testNonceResponse } from '../helpers/fixtures'
+import { testConfig } from '../helpers/fixtures'
 import { hasConfig, loadConfig, saveConfig } from '../../src/lib/config'
 import { authCli } from '../../src/commands/auth'
 
@@ -69,9 +69,9 @@ async function runAuthCommand(args: string[]) {
 test('login success saves credentials and returns email', async () => {
   server = createMockServer([
     {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-      body: testNonceResponse,
+      method: 'GET',
+      path: '/user',
+      body: { email: testConfig.email },
     },
   ])
   process.env.HSTORAGE_API_URL = server.url
@@ -100,32 +100,19 @@ test('login success saves credentials and returns email', async () => {
 
   expect(server.requests).toMatchObject([
     {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-      body: {
-        api_key: testConfig.apiKey,
-        secret_key: testConfig.secretKey,
-      },
+      method: 'GET',
+      path: '/user',
     },
   ])
+
+  expect(server.requests[0].headers['x-eu-api-key']).toMatch(/^[0-9a-f]+$/)
+  expect(server.requests[0].headers['x-eu-nonce']).toMatch(/^[0-9a-f]+$/)
 
   expect(await loadConfig()).toEqual(testConfig)
 })
 
 test('login failure with invalid credentials returns INVALID_CREDENTIALS', async () => {
-  server = createMockServer([
-    {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-      status: 401,
-      body: {
-        error: {
-          code: 'invalid_credentials',
-          message: 'Bad credentials',
-        },
-      },
-    },
-  ])
+  server = createMockServer([])
   process.env.HSTORAGE_API_URL = server.url
 
   const response = await runAuthCommand([
@@ -159,11 +146,6 @@ test('logout success calls API and removes credentials', async () => {
   server = createMockServer([
     {
       method: 'POST',
-      path: '/api/generate-crypto-key',
-      body: testNonceResponse,
-    },
-    {
-      method: 'POST',
       path: '/user/logout',
       body: { ok: true },
     },
@@ -177,8 +159,8 @@ test('logout success calls API and removes credentials', async () => {
   const payload = JSON.parse(response.output)
   expect(payload).toEqual({ message: 'Logged out successfully' })
 
-  expect(server.requests).toHaveLength(2)
-  expect(server.requests[1]).toMatchObject({
+  expect(server.requests).toHaveLength(1)
+  expect(server.requests[0]).toMatchObject({
     method: 'POST',
     path: '/user/logout',
   })

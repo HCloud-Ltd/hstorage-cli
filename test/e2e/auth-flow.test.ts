@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { cli } from '../../src/index'
 import { createMockServer } from '../helpers/mock-server'
-import { testConfig, testNonceResponse } from '../helpers/fixtures'
+import { testConfig } from '../helpers/fixtures'
 
 let server = createMockServer([])
 let tmpDir = ''
@@ -61,9 +61,9 @@ async function runCli(argv: string[]) {
 test('auth login -> status -> logout -> status flow', async () => {
   server = createMockServer([
     {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-      body: testNonceResponse,
+      method: 'GET',
+      path: '/user',
+      body: { email: testConfig.email },
     },
     {
       method: 'POST',
@@ -120,20 +120,8 @@ test('auth login -> status -> logout -> status flow', async () => {
 
   expect(server.requests).toMatchObject([
     {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-      body: {
-        api_key: testConfig.apiKey,
-        secret_key: testConfig.secretKey,
-      },
-    },
-    {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-      body: {
-        api_key: testConfig.apiKey,
-        secret_key: testConfig.secretKey,
-      },
+      method: 'GET',
+      path: '/user',
     },
     {
       method: 'POST',
@@ -141,5 +129,5 @@ test('auth login -> status -> logout -> status flow', async () => {
       body: null,
     },
   ])
-  expect(server.requests).toHaveLength(3)
+  expect(server.requests).toHaveLength(2)
 })

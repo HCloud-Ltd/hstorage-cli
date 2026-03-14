@@ -2,4 +2,4 @@ node_modules/
 dist/
 .sisyphus/evidence/
 *.compiled
-hstorage
+hcli

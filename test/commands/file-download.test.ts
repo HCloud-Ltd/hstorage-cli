@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Cli, middleware } from 'incur'
 import { createMockServer, type Route } from '../helpers/mock-server'
-import { testConfig, testNonceResponse, testUpload } from '../helpers/fixtures'
+import { testConfig, testUpload } from '../helpers/fixtures'
 import type { Upload } from '../../src/types/api'
 import { authVars } from '../../src/middleware/auth'
 import { createApiClient } from '../../src/lib/client'
@@ -77,14 +77,6 @@ function createDownloadMockServer(
       headers: Object.fromEntries(req.headers.entries()),
       body,
     })
-
-    if (url.pathname === '/api/generate-crypto-key' && req.method === 'POST') {
-      return new Response(JSON.stringify(testNonceResponse), {
-        headers: {
-          'content-type': 'application/json',
-        },
-      })
-    }
 
     if (url.pathname === '/file/info' && req.method === 'GET') {
       if (expectedPassword !== undefined && url.searchParams.get('password') !== expectedPassword) {
@@ -215,12 +207,12 @@ test('downloads file and saves to the default output path', async () => {
     expect(result.file_name).toBe(testUpload.file_name)
     expect(result.original_file_name).toBe(testUpload.original_file_name)
     expect(await Bun.file(expectedPath).text()).toBe(expectedContent)
-    expect(server.requests).toHaveLength(3)
-    expect(server.requests[1]).toMatchObject({
+    expect(server.requests).toHaveLength(2)
+    expect(server.requests[0]).toMatchObject({
       method: 'GET',
     })
-    expect(server.requests[1]?.path.startsWith('/file/info')).toBe(true)
-    expect(server.requests[2]).toMatchObject({
+    expect(server.requests[0]?.path.startsWith('/file/info')).toBe(true)
+    expect(server.requests[1]).toMatchObject({
       method: 'GET',
       path: '/file-content',
     })
@@ -254,11 +246,11 @@ test('downloads to the path specified by --output', async () => {
   expect(result.saved_to).toBe(outputPath)
   expect(result.file_size).toBe(testUpload.file_size)
   expect(await Bun.file(outputPath).text()).toBe(expectedContent)
-  expect(server.requests).toHaveLength(3)
-  expect(server.requests[1]).toMatchObject({
+  expect(server.requests).toHaveLength(2)
+  expect(server.requests[0]).toMatchObject({
     method: 'GET',
   })
-  expect(server.requests[1]?.path.startsWith('/file/info')).toBe(true)
+  expect(server.requests[0]?.path.startsWith('/file/info')).toBe(true)
 })
 
 test('sends password as query parameter for file info request', async () => {
@@ -294,7 +286,7 @@ test('sends password as query parameter for file info request', async () => {
   expect(infoRequestUrl.searchParams.get('external_id')).toBe(testUpload.external_id!)
   expect(result.saved_to).toBe(outputPath)
   expect(await Bun.file(outputPath).text()).toBe(expectedContent)
-  expect(server.requests).toHaveLength(3)
+  expect(server.requests).toHaveLength(2)
   expect(infoRequest).toMatchObject({
     method: 'GET',
     path: `/file/info?external_id=${testUpload.external_id}&password=secret`,
@@ -303,11 +295,6 @@ test('sends password as query parameter for file info request', async () => {
 
 test('returns FILE_NOT_FOUND when /file/info responds with 404', async () => {
   server = createMockServer([
-    {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-      body: testNonceResponse,
-    },
     {
       method: 'GET',
       path: '/file/info',
@@ -336,8 +323,8 @@ test('returns FILE_NOT_FOUND when /file/info responds with 404', async () => {
     code: 'FILE_NOT_FOUND',
     message: 'File not found',
   })
-  expect(server.requests).toHaveLength(2)
-  expect(server.requests[1]).toMatchObject({
+  expect(server.requests).toHaveLength(1)
+  expect(server.requests[0]).toMatchObject({
     method: 'GET',
     path: '/file/info',
   })

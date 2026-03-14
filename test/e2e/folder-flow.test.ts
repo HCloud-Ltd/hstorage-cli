@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { saveConfig } from '../../src/lib/config'
 import { createMockServer } from '../helpers/mock-server'
-import { testConfig, testFolder, testFolderShare, testFolderTreeResponse, testNonceResponse } from '../helpers/fixtures'
+import { testConfig, testFolder, testFolderShare, testFolderTreeResponse } from '../helpers/fixtures'
 import { cli } from '../../src/index'
 
 let server = createMockServer([])
@@ -49,11 +49,6 @@ afterEach(async () => {
 
 beforeEach(() => {
   server = createMockServer([
-    {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-      body: testNonceResponse,
-    },
     {
       method: 'PUT',
       path: '/folder',
@@ -195,27 +190,15 @@ test('folder create -> list -> update -> share -> delete flow', async () => {
     ok: true,
   })
 
-  expect(server.requests).toHaveLength(10)
+  expect(server.requests).toHaveLength(5)
   expect(server.requests).toMatchObject([
-    {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-    },
     {
       method: 'PUT',
       path: '/folder',
     },
     {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-    },
-    {
       method: 'GET',
       path: '/folders',
-    },
-    {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
     },
     {
       method: 'POST',
@@ -226,16 +209,8 @@ test('folder create -> list -> update -> share -> delete flow', async () => {
       },
     },
     {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-    },
-    {
       method: 'PUT',
       path: '/folder/folder-e2e/share',
-    },
-    {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
     },
     {
       method: 'DELETE',
@@ -243,7 +218,7 @@ test('folder create -> list -> update -> share -> delete flow', async () => {
       body: null,
     },
   ])
-  expect(server.requests[1]).toMatchObject({
+  expect(server.requests[0]).toMatchObject({
     body: {
       name: 'E2E Folder',
       parent_id: 10,
@@ -251,7 +226,7 @@ test('folder create -> list -> update -> share -> delete flow', async () => {
       is_public_upload: true,
     },
   })
-  expect(server.requests[7]).toMatchObject({
+  expect(server.requests[3]).toMatchObject({
     body: {
       email: 'guest@example.com',
       permission: 'edit',

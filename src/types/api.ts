@@ -25,7 +25,9 @@ export interface PreSignedRespV1 {
   file_name?: string
   share_url?: string
   direct_url?: string
-  pre_signed_url?: string
+  presigned_url?: string
+  sseKey?: string
+  sseMD5?: string
 }
 
 export interface Upload {
@@ -252,6 +254,12 @@ export interface ApiError {
     code: string
     message: string
   }
+}
+
+export interface ErrorMsg {
+  title: string
+  msg: string
+  error: string
 }
 
 export interface RateLimitError {

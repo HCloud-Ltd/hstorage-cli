@@ -3,7 +3,6 @@ import { Cli, middleware } from 'incur'
 import { createMockServer, type Route } from '../helpers/mock-server'
 import {
   testConfig,
-  testNonceResponse,
   testFolder,
   testFolderResponse,
   testFolderTreeResponse,
@@ -30,10 +29,7 @@ afterEach(() => {
 })
 
 function setupCli(routes: Route[]) {
-  server = createMockServer([
-    { method: 'POST', path: '/api/generate-crypto-key', body: testNonceResponse },
-    ...routes,
-  ])
+  server = createMockServer([...routes])
 
   const client = createApiClient(testConfig, { baseUrl: server.url })
 
@@ -63,14 +59,6 @@ function setupPublicFolderServer(response: unknown, options: { password?: string
         }
 
         return new Response(JSON.stringify(response), {
-          headers: {
-            'content-type': 'application/json',
-          },
-        })
-      }
-
-      if (url.pathname === '/api/generate-crypto-key') {
-        return new Response(JSON.stringify(testNonceResponse), {
           headers: {
             'content-type': 'application/json',
           },
@@ -167,7 +155,7 @@ test('list returns folder tree response', async () => {
     uid: testFolderTreeResponse.folders?.[0]?.uid,
     name: testFolderTreeResponse.folders?.[0]?.name,
   })
-  expect(getServer().requests[1]).toMatchObject({
+  expect(getServer().requests[0]).toMatchObject({
     method: 'GET',
     path: '/folders',
   })
@@ -192,7 +180,7 @@ test('get fetches folder with auth client', async () => {
     uid: testFolderResponse.folder?.uid,
     name: testFolderResponse.folder?.name,
   })
-  expect(getServer().requests[1]).toMatchObject({
+  expect(getServer().requests[0]).toMatchObject({
     method: 'GET',
     path: '/folder',
   })
@@ -220,7 +208,7 @@ test('get with auth includes uid and optional password in request params', async
 
   expect(response.exitCalled).toBe(false)
   expect(payload.folder?.uid).toBe(testFolder.uid!)
-  expect(getServer().requests[1]).toMatchObject({
+  expect(getServer().requests[0]).toMatchObject({
     method: 'GET',
     path: '/folder',
   })
@@ -314,14 +302,6 @@ test('get without auth returns folder not found when response is not ok', async 
         )
       }
 
-      if (url.pathname === '/api/generate-crypto-key') {
-        return new Response(JSON.stringify(testNonceResponse), {
-          headers: {
-            'content-type': 'application/json',
-          },
-        })
-      }
-
       return new Response('Not Found', { status: 404 })
     },
   })
@@ -398,7 +378,7 @@ test('create posts folder data and returns created folder', async () => {
     is_public_view: true,
     is_public_upload: true,
   })
-  expect(getServer().requests[1]).toMatchObject({
+  expect(getServer().requests[0]).toMatchObject({
     method: 'PUT',
     path: '/folder',
     body: {
@@ -442,7 +422,7 @@ test('update sends partial fields and returns updated folder', async () => {
   expect(response.exitCalled).toBe(false)
   expect(payload.name).toBe('Updated Folder')
   expect(payload.parent_id).toBe(5)
-  expect(getServer().requests[1]).toMatchObject({
+  expect(getServer().requests[0]).toMatchObject({
     method: 'POST',
     path: '/folder',
     body: {
@@ -494,9 +474,9 @@ test('delete with confirm calls API and returns ok', async () => {
 
   expect(response.exitCalled).toBe(false)
   expect(payload).toEqual({ ok: true })
-  expect(getServer().requests[1]).toMatchObject({
+  expect(getServer().requests[0]).toMatchObject({
     method: 'DELETE',
     path: '/folder',
   })
-  expect(getServer().requests[1].body).toBeNull()
+  expect(getServer().requests[0].body).toBeNull()
 })

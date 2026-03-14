@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { middleware } from 'incur'
 import { createMockServer, type Route } from '../helpers/mock-server'
-import { testConfig, testNonceResponse } from '../helpers/fixtures'
+import { testConfig } from '../helpers/fixtures'
 import { authVars } from '../../src/middleware/auth'
 import { createApiClient } from '../../src/lib/client'
 import { uploadCli } from '../../src/commands/file/upload'
@@ -31,11 +31,6 @@ afterEach(async () => {
 
 function setupCli(routes: Route[]) {
   server = createMockServer([
-    {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-      body: testNonceResponse,
-    },
     ...routes,
   ])
 
@@ -47,8 +42,8 @@ function setupCli(routes: Route[]) {
     if (typeof route.body === 'object' && route.body !== null) {
       const body = route.body as Record<string, unknown>
 
-      if ('pre_signed_url' in body) {
-        body.pre_signed_url = `${server.url}/upload-target`
+      if ('presigned_url' in body) {
+        body.presigned_url = `${server.url}/test-bucket/test-key`
       }
     }
   }
@@ -98,12 +93,12 @@ test('uploads a file successfully and returns share URLs', async () => {
         path: '/upload/v1/presigned',
         body: {
           ...testPresignedBase,
-          pre_signed_url: '',
+          presigned_url: '',
         },
       },
       {
         method: 'PUT',
-        path: '/upload-target',
+        path: '/test-bucket/test-key',
         body: {},
       },
     ],
@@ -113,9 +108,9 @@ test('uploads a file successfully and returns share URLs', async () => {
 
   expect(response.exitCalled).toBe(false)
   expect(payload).toMatchObject(testPresignedBase)
-  expect(JSON.stringify(payload)).not.toContain('pre_signed_url')
-  expect(server.requests).toHaveLength(3)
-  expect(server.requests[1]).toMatchObject({
+  expect(JSON.stringify(payload)).not.toContain('presigned_url')
+  expect(server.requests).toHaveLength(2)
+  expect(server.requests[0]).toMatchObject({
     method: 'POST',
     path: '/upload/v1/presigned',
     body: {
@@ -124,9 +119,9 @@ test('uploads a file successfully and returns share URLs', async () => {
       is_encrypt: false,
     },
   })
-  expect(server.requests[2]).toMatchObject({
+  expect(server.requests[1]).toMatchObject({
     method: 'PUT',
-    path: '/upload-target',
+    path: '/test-bucket/test-key',
   })
 })
 
@@ -174,13 +169,13 @@ test('uploads with options and sends presigned request parameters', async () => 
         path: '/upload/v1/presigned',
         body: {
           ...testPresignedBase,
-          pre_signed_url: '',
+          presigned_url: '',
           file_name: 'option.txt',
         },
       },
       {
         method: 'PUT',
-        path: '/upload-target',
+        path: '/test-bucket/test-key',
         body: {},
       },
     ],
@@ -193,8 +188,8 @@ test('uploads with options and sends presigned request parameters', async () => 
     ...testPresignedBase,
     file_name: 'option.txt',
   })
-  expect(server.requests).toHaveLength(3)
-  expect(server.requests[1]).toMatchObject({
+  expect(server.requests).toHaveLength(2)
+  expect(server.requests[0]).toMatchObject({
     method: 'POST',
     path: '/upload/v1/presigned',
     body: {
@@ -239,8 +234,8 @@ test('returns error when presigned URL request fails', async () => {
     code: 'UPLOAD_REQUEST_FAILED',
     message: 'Unable to prepare upload',
   })
-  expect(server.requests).toHaveLength(2)
-  expect(server.requests[1]).toMatchObject({
+  expect(server.requests).toHaveLength(1)
+  expect(server.requests[0]).toMatchObject({
     method: 'POST',
     path: '/upload/v1/presigned',
   })
@@ -259,12 +254,12 @@ test('returns error when upload to presigned URL fails', async () => {
         path: '/upload/v1/presigned',
         body: {
           ...testPresignedBase,
-          pre_signed_url: '',
+          presigned_url: '',
         },
       },
       {
         method: 'PUT',
-        path: '/upload-target',
+        path: '/test-bucket/test-key',
         status: 500,
         body: {
           error: 'Upload failed',
@@ -279,9 +274,9 @@ test('returns error when upload to presigned URL fails', async () => {
   expect(response.exitCode).toBe(1)
   expect(payload.code).toBe('UPLOAD_FAILED')
   expect(payload.message).toMatch(/^Upload failed:/)
-  expect(server.requests).toHaveLength(3)
-  expect(server.requests[2]).toMatchObject({
+  expect(server.requests).toHaveLength(2)
+  expect(server.requests[1]).toMatchObject({
     method: 'PUT',
-    path: '/upload-target',
+    path: '/test-bucket/test-key',
   })
 })

@@ -1,9 +1,11 @@
 import { afterEach, expect, test } from 'bun:test'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { Cli, middleware } from 'incur'
 import { createMockServer, type Route } from '../helpers/mock-server'
 import {
   testConfig,
-  testNonceResponse,
   testFolderShare,
   testSharedFolderItem,
 } from '../helpers/fixtures'
@@ -30,7 +32,6 @@ function getServer(): NonNullable<typeof server> {
 
 function setupCli(routes: Route[]) {
   server = createMockServer([
-    { method: 'POST', path: '/api/generate-crypto-key', body: testNonceResponse },
     ...routes,
   ])
 
@@ -87,7 +88,7 @@ test('shares lists shares for folder', async () => {
     uid: testFolderShare.uid,
     shared_to_email: testFolderShare.shared_to_email,
   })
-  expect(getServer().requests[1]).toMatchObject({
+  expect(getServer().requests[0]).toMatchObject({
     method: 'GET',
     path: '/folder/folder-uid-abc/shares',
   })
@@ -125,7 +126,7 @@ test('share creates folder share with provided permission', async () => {
   expect(response.exitCalled).toBe(false)
   expect(payload.shared_to_email).toBe('guest@example.com')
   expect(payload.permission).toBe('edit')
-  expect(getServer().requests[1]).toMatchObject({
+  expect(getServer().requests[0]).toMatchObject({
     method: 'PUT',
     path: '/folder/folder-uid-abc/share',
     body: {
@@ -168,7 +169,7 @@ test('update-share updates permission', async () => {
   expect(response.exitCalled).toBe(false)
   expect(payload.uid).toBe('share-uid-001')
   expect(payload.permission).toBe('admin')
-  expect(getServer().requests[1]).toMatchObject({
+  expect(getServer().requests[0]).toMatchObject({
     method: 'PUT',
     path: '/folder/folder-uid-abc/share/share-uid-001',
     body: {
@@ -202,7 +203,7 @@ test('remove-share deletes share entry', async () => {
 
   expect(response.exitCalled).toBe(false)
   expect(payload.ok).toBe(true)
-  expect(getServer().requests[1]).toMatchObject({
+  expect(getServer().requests[0]).toMatchObject({
     method: 'DELETE',
     path: '/folder/folder-uid-abc/share/share-uid-001',
     body: null,
@@ -232,36 +233,46 @@ test('shared-folders lists folders shared with me', async () => {
     folder_uid: testSharedFolderItem.folder_uid,
     permission: testSharedFolderItem.permission,
   })
-  expect(getServer().requests[1]).toMatchObject({
+  expect(getServer().requests[0]).toMatchObject({
     method: 'GET',
     path: '/folders/shared',
   })
 })
 
 test('command fails without authentication client', async () => {
-  const outputs: string[] = []
-  let exitCalled = false
-  let exitCode = 0
+  const tmpDir = await mkdtemp(join(tmpdir(), 'hstorage-test-'))
+  const originalXDG = process.env.XDG_CONFIG_HOME
+  process.env.XDG_CONFIG_HOME = tmpDir
 
-  await Cli.create('test', { vars: authVars }).command(folderShareCli).serve(
-    ['folder-share', 'shares', '--folder-uid', 'folder-uid-abc', '--format', 'json'],
-    {
-      stdout: (s) => {
-        outputs.push(s)
+  try {
+    const outputs: string[] = []
+    let exitCalled = false
+    let exitCode = 0
+
+    await Cli.create('test', { vars: authVars }).command(folderShareCli).serve(
+      ['folder-share', 'shares', '--folder-uid', 'folder-uid-abc', '--format', 'json'],
+      {
+        stdout: (s) => {
+          outputs.push(s)
+        },
+        exit: (code) => {
+          exitCalled = true
+          exitCode = code
+        },
       },
-      exit: (code) => {
-        exitCalled = true
-        exitCode = code
-      },
-    },
-  )
+    )
 
-  const payload = JSON.parse(outputs.join(''))
+    const payload = JSON.parse(outputs.join(''))
 
-  expect(exitCalled).toBe(true)
-  expect(exitCode).toBe(1)
-  expect(payload).toEqual({
-    code: 'AUTH_REQUIRED',
-    message: 'Not logged in. Run `hstorage auth login` to authenticate.',
-  })
+    expect(exitCalled).toBe(true)
+    expect(exitCode).toBe(1)
+    expect(payload).toEqual({
+      code: 'AUTH_REQUIRED',
+      message: 'Not logged in. Run `hstorage auth login` to authenticate.',
+    })
+  } finally {
+    if (originalXDG === undefined) delete process.env.XDG_CONFIG_HOME
+    else process.env.XDG_CONFIG_HOME = originalXDG
+    await rm(tmpDir, { recursive: true, force: true })
+  }
 })

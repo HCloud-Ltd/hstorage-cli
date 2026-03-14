@@ -33,7 +33,7 @@ function getClientErrorMessage(error: unknown): { code: string; message: string 
 }
 
 export const downloadCli = Cli.create('download', {
-  description: 'Download a file from hStorage',
+  description: 'Download a file from HStorage',
   vars: authVars,
   args: z.object({
     externalId: z.string().describe('File external ID'),

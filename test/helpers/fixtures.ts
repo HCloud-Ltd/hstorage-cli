@@ -16,7 +16,7 @@ import type {
 export const testConfig: HStorageConfig = {
   email: 'test@example.com',
   apiKey: 'test-api-key',
-  secretKey: 'test-secret-key',
+  secretKey: 'test-secret-key-padding-32bytes!',
 }
 
 export const testNonceResponse: PostmanRes = {

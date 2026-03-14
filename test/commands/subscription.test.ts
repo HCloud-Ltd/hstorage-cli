@@ -1,7 +1,7 @@
 import { afterEach, expect, test } from 'bun:test'
 import { Cli, middleware } from 'incur'
 import { createMockServer, type Route } from '../helpers/mock-server'
-import { testConfig, testNonceResponse } from '../helpers/fixtures'
+import { testConfig } from '../helpers/fixtures'
 import { authVars } from '../../src/middleware/auth'
 import { createApiClient } from '../../src/lib/client'
 import { subscriptionCli } from '../../src/commands/subscription'
@@ -14,11 +14,6 @@ afterEach(() => {
 
 function setupCli(routes: Route[]) {
   server = createMockServer([
-    {
-      method: 'POST',
-      path: '/api/generate-crypto-key',
-      body: testNonceResponse,
-    },
     ...routes,
   ])
 
@@ -97,7 +92,7 @@ test('cancel with confirm posts subscription cancellation', async () => {
     message: 'Subscription cancelled',
     type: 'premium',
   })
-  expect(server.requests[1]).toMatchObject({
+  expect(server.requests[0]).toMatchObject({
     method: 'POST',
     path: '/subscription',
     body: null,
@@ -130,7 +125,7 @@ test('session returns checkout URL', async () => {
 
   expect(response.exitCalled).toBe(false)
   expect(payload.url).toBe('https://checkout.hstorage.io/session')
-  expect(server.requests[1]).toMatchObject({
+  expect(server.requests[0]).toMatchObject({
     method: 'GET',
     path: '/subscription/session',
     body: null,

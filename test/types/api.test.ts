@@ -91,7 +91,7 @@ test('additional api types compile', () => {
   const okResponse: OkResponse = { ok: true }
   const postmanRes: PostmanRes = { api_key: 'key', nonce: 'nonce' }
   const preSignedConfigReq: PreSignedConfigReq = { file_name: 'file.txt' }
-  const preSignedResp: PreSignedRespV1 = { external_id: 'id', pre_signed_url: 'https://example.com' }
+  const preSignedResp: PreSignedRespV1 = { external_id: 'id', presigned_url: 'https://example.com' }
 
   expect(tree.folders?.[0]?.name).toBe('docs')
   expect(files.total).toBe(0)
