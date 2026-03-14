@@ -6,7 +6,7 @@
 
 ### 使用例デモ
 
-<video src="https://hstorage.io/dl/fnwigAWkSUO3.mp4?download=true" controls></video>
+[![使用例デモ](assets/demo-thumbnail.jpg)](https://hstorage.io/dl/fnwigAWkSUO3.mp4)
 
 ## 目次
 
