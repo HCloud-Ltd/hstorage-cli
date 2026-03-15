@@ -1,0 +1,24 @@
+name: Auto.Tag
+
+on:
+  - push
+
+permissions: {}
+
+concurrency:
+  group: auto-tag-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tag:
+    name: Create tag
+    runs-on: ubuntu-slim
+    permissions:
+      contents: write # Required to push tags
+      issues: read # Required to read issue labels for version bumping
+    steps:
+      - uses: phish108/autotag-action@6dcf3d78f00f1a55df67a02428af3f1b862da6dc # v1.1.64
+        with:
+          github-token: ${{ secrets.PAT }}
+          branch: main
+          with-v: true
