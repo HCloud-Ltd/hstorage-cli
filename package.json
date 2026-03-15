@@ -9,6 +9,9 @@
     "dev": "bun run src/index.ts",
     "test": "bun test",
     "build": "bun build --compile src/index.ts --outfile hcli",
+    "generate:types": "bun scripts/generate-types.ts",
+    "prebuild": "bun run generate:types",
+    "pretest": "bun run generate:types",
     "prepare": "husky"
   },
   "dependencies": {
@@ -18,7 +21,8 @@
   "devDependencies": {
     "@types/bun": "^1.3.10",
     "husky": "^9.1.7",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "yaml": "^2.8.2"
   },
   "patchedDependencies": {
     "incur@0.3.4": "patches/incur@0.3.4.patch"
