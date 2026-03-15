@@ -4,3 +4,4 @@ dist/
 *.compiled
 hcli
 .env
+src/types/api.ts
