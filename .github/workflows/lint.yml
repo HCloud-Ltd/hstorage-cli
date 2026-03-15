@@ -35,6 +35,7 @@ jobs:
           path: hstorage-api
           sparse-checkout: openapi.yaml
           token: ${{ secrets.API_REPO_TOKEN }}
+          persist-credentials: false
 
       - name: Run zizmor
         uses: zizmorcore/zizmor-action@0dce2577a4760a2749d8cfb7a84b7d5585ebcb7d # v0.5.0
