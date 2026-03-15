@@ -7,7 +7,6 @@ on:
   workflow_dispatch:
 
 permissions:
-  # Required to checkout code
   contents: read
 
 concurrency:
@@ -18,10 +17,20 @@ jobs:
   test:
     name: Unit tests
     runs-on: ubuntu-slim
+    env:
+      OPENAPI_PATH: ${{ github.workspace }}/hstorage-api/openapi.yaml
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           persist-credentials: false
+
+      - name: Checkout API spec
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          repository: HCloud-Ltd/hstorage-api
+          path: hstorage-api
+          sparse-checkout: openapi.yaml
+          token: ${{ secrets.API_REPO_TOKEN }}
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 
@@ -40,10 +49,20 @@ jobs:
     name: E2E tests
     runs-on: ubuntu-slim
     timeout-minutes: 10
+    env:
+      OPENAPI_PATH: ${{ github.workspace }}/hstorage-api/openapi.yaml
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           persist-credentials: false
+
+      - name: Checkout API spec
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          repository: HCloud-Ltd/hstorage-api
+          path: hstorage-api
+          sparse-checkout: openapi.yaml
+          token: ${{ secrets.API_REPO_TOKEN }}
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 
