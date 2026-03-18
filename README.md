@@ -20,8 +20,6 @@
   - [フォルダ共有](#フォルダ共有)
   - [チーム管理](#チーム管理)
   - [ユーザー管理](#ユーザー管理)
-  - [SFTP/WebDAV](#sftpwebdav)
-  - [サブスクリプション](#サブスクリプション)
 - [出力フォーマット](#出力フォーマット)
   - [出力のフィルタリング](#出力のフィルタリング)
   - [トークン制御](#トークン制御)
@@ -39,8 +37,6 @@
   - [`folder` — フォルダ管理](#folder--フォルダ管理)
   - [`folder-share` — フォルダ共有](#folder-share--フォルダ共有)
   - [`team` — チーム管理](#team--チーム管理)
-  - [`subscription` — サブスクリプション管理](#subscription--サブスクリプション管理)
-  - [`sftp` — SFTP/WebDAV 管理](#sftp--sftpwebdav-管理)
   - [`user` — ユーザー管理](#user--ユーザー管理)
 - [グローバルオプション](#グローバルオプション)
 - [動作要件](#動作要件)
@@ -236,26 +232,6 @@ hcli user settings-get
 
 # ユーザー設定を更新
 hcli user settings-update --key value
-```
-
-### SFTP/WebDAV
-
-```bash
-# SFTP/WebDAV の権限を更新
-hcli sftp permission --insecure true
-
-# デフォルト権限に戻す
-hcli sftp permission --insecure false
-```
-
-### サブスクリプション
-
-```bash
-# サブスクリプションを解約
-hcli subscription cancel
-
-# Stripe チェックアウトセッションを作成
-hcli subscription session
 ```
 
 ## 出力フォーマット
@@ -474,19 +450,6 @@ hstorage completions nushell          # config.nu の手順を確認
 | `remove-member <userId>` | チームメンバーを削除               |
 | `storage`                | チームのストレージ状況を表示       |
 | `update-storage`         | メンバーのストレージ割り当てを変更 |
-
-### `subscription` — サブスクリプション管理
-
-| サブコマンド | 説明                                  |
-| ------------ | ------------------------------------- |
-| `cancel`     | サブスクリプションを解約              |
-| `session`    | Stripe チェックアウトセッションを作成 |
-
-### `sftp` — SFTP/WebDAV 管理
-
-| サブコマンド | 説明                     |
-| ------------ | ------------------------ |
-| `permission` | SFTP/WebDAV の権限を更新 |
 
 ### `user` — ユーザー管理
 
