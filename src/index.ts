@@ -4,8 +4,6 @@ import { authCli } from "./commands/auth";
 import { userCli } from "./commands/user";
 import { folderCli } from "./commands/folder";
 import { teamCli } from "./commands/team";
-import { subscriptionCli } from "./commands/subscription";
-import { sftpCli } from "./commands/sftp";
 import { fileCli } from "./commands/file";
 import { uploadCli } from "./commands/file/upload";
 import { downloadCli } from "./commands/file/download";
@@ -28,9 +26,7 @@ cli
   .command(fullFileCli)
   .command(folderCli.use(requireAuth))
   .command(folderShareCli.use(requireAuth))
-  .command(teamCli.use(requireAuth))
-  .command(subscriptionCli.use(requireAuth))
-  .command(sftpCli.use(requireAuth));
+  .command(teamCli.use(requireAuth));
 
 if (import.meta.main) {
   cli.serve(undefined, {
