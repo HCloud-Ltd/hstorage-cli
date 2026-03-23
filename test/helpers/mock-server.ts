@@ -3,6 +3,7 @@ export interface Route {
   path: string
   status?: number
   body: unknown
+  handler?: (url: URL, body: unknown) => { status?: number; body: unknown }
 }
 
 export interface RecordedRequest {
@@ -60,6 +61,16 @@ export function createMockServer(routes: Route[]): MockServer {
 
       if (!route) {
         return new Response('Not Found', { status: 404 })
+      }
+
+      if (route.handler) {
+        const result = route.handler(url, body)
+        return new Response(JSON.stringify(result.body), {
+          status: result.status ?? 200,
+          headers: {
+            'content-type': 'application/json',
+          },
+        })
       }
 
       return new Response(JSON.stringify(route.body), {
