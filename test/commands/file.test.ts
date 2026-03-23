@@ -35,14 +35,26 @@ async function runFileCommand(args: string[], routes: Route[]) {
   const outputs: string[] = []
   let exitCalled = false
   let exitCode = 0
+  const originalProcessExitCode = process.exitCode
 
-  await setupCli(routes).serve(args, {
-    stdout: (s) => outputs.push(s),
-    exit: (code) => {
+  process.exitCode = 0
+
+  try {
+    await setupCli(routes).serve(args, {
+      stdout: (s) => outputs.push(s),
+      exit: (code) => {
+        exitCalled = true
+        exitCode = code
+      },
+    })
+
+    if (!exitCalled && process.exitCode === 1) {
       exitCalled = true
-      exitCode = code
-    },
-  })
+      exitCode = process.exitCode
+    }
+  } finally {
+    process.exitCode = originalProcessExitCode
+  }
 
   return {
     output: outputs.join(''),
@@ -490,9 +502,13 @@ test('delete --all continues after delete failure and exits non-zero', async () 
 
   expect(response.exitCalled).toBe(true)
   expect(response.exitCode).toBe(1)
-  expect(payload).toMatchObject({
+  expect(payload).toEqual({
+    code: 'PARTIAL_DELETE_FAILURE',
+    message: 'Some files could not be deleted',
     deleted_count: 2,
     failed_count: 1,
+    skipped_count: 0,
+    total: 3,
     failed_ids: ['ext_fail'],
   })
 })

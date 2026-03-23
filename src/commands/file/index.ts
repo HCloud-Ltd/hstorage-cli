@@ -191,51 +191,16 @@ fileCli.command('delete', {
     }
 
     if (failedIds.length > 0) {
-      const failedResult = {
+      if (process.exitCode === undefined || process.exitCode === 0) {
+        process.exitCode = 1
+      }
+
+      return {
+        code: 'PARTIAL_DELETE_FAILURE',
+        message: 'Some files could not be deleted',
         ...result,
         failed_ids: failedIds,
       }
-
-      if (c.format === 'json') {
-        const originalStringify = JSON.stringify
-
-        JSON.stringify = (value, replacer, space) => {
-          const stringifyWithOriginal = (input: unknown): string => {
-            if (replacer === undefined || replacer === null || Array.isArray(replacer)) {
-              return originalStringify(input, replacer, space)
-            }
-
-            return originalStringify(input, replacer, space)
-          }
-
-          if (
-            typeof value === 'object'
-            && value !== null
-            && 'code' in value
-            && value.code === 'PARTIAL_DELETE_FAILURE'
-            && 'message' in value
-            && value.message === 'Some files could not be deleted'
-          ) {
-            JSON.stringify = originalStringify
-
-            return stringifyWithOriginal({
-              ...value,
-              ...failedResult,
-            })
-          }
-
-          return stringifyWithOriginal(value)
-        }
-
-        setTimeout(() => {
-          JSON.stringify = originalStringify
-        }, 0)
-      }
-
-      return c.error({
-        code: 'PARTIAL_DELETE_FAILURE',
-        message: 'Some files could not be deleted',
-      })
     }
 
     return result
